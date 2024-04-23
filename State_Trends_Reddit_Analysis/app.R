@@ -1099,29 +1099,64 @@ library(plotly)
 library(wordcloud2)
 library(reshape2)
 library(RColorBrewer)
+library(shiny)
+library(shinydashboard)
+library(shinyjs)
+library(ggplot2)
+library(plotly)
+library(wordcloud2)
+library(reshape2)
+library(RColorBrewer)
 
-# UI for integrated Shiny modules
+# Function to create a custom dashboard header with a hyperlink
+# Custom Header with a hyperlink at the left side
+library(shiny)
+library(shinydashboard)
+library(shinyjs)
+library(ggplot2)
+library(plotly)
+library(wordcloud2)
+library(reshape2)
+library(RColorBrewer)
+
+# Function to create a custom dashboard header with a hyperlink
+# Custom Header with a hyperlink at the left side
+header_with_link <- function(url, label) {
+  dashboardHeader(
+    title = tags$a(href = url, target = "_blank", tags$span(label, style = "font-size: 18px; color: white;"), style = "color: white; text-decoration: none;"),
+    titleWidth = 430
+  )
+}
+
+# UI for integrated Shiny modules with a clickable header
 ui <- dashboardPage(
-  dashboardHeader(titleWidth = 380, title = "Pet Data Insights: State Trends & Reddit NLP Dive"),
+  header_with_link("https://github.com/QMSS-G5063-2024/Group_O_PetScape-USA.git", "Pet Data Insights : State Trends & Reddit NLP Dive"), # Replace http://www.example.com with your desired URL
   dashboardSidebar(
-    width = 380,
+    width = 350,
     sidebarMenu(
-      menuItem("Overall Pet Care Score", tabName = "health_scores", icon = icon("heartbeat")),
-      menuItem("Vaccination Rate", tabName = "vaccination", icon = icon("syringe")),
-      menuItem("Microchip Rate", tabName = "microchip", icon = icon("microchip")),
-      menuItem("Rate of Adopted Pets Returned to Shelters", tabName = "return_rates", icon = icon("reply")),
-      menuItem("Average Pet Spending by Households", tabName = "spending", icon = icon("wallet")),
-      menuItem("Topic Analysis", tabName = "topic_analysis", icon = icon("comment-alt"),
-               menuSubItem("Topic Analysis", tabName = "topic_analysis_sub"),
-               menuSubItem("Coherence Score", tabName = "coherence_score"),
-               menuSubItem("Word Frequency Analysis", tabName = "word_frequency")
+      menuItem("2022 State-Level Pet Data", tabName = "state_level_data", icon = icon("paw"),
+               menuItem("Overall Pet Care Score", tabName = "health_scores", icon = icon("heartbeat")),
+               menuItem("Vaccination Rate", tabName = "vaccination", icon = icon("syringe")),
+               menuItem("Microchip Rate", tabName = "microchip", icon = icon("microchip")),
+               menuItem("Rate of Adopted Pets Returned to Shelters", tabName = "return_rates", icon = icon("reply")),
+               menuItem("Average Pet Spending by Households", tabName = "spending", icon = icon("wallet"))
       ),
-      menuItem("Season Trend Analysis", tabName = "season_trend_analysis", icon = icon("calendar-alt"))
+      menuItem("Reddit Pets: NLP Data Dive", tabName = "nlp_data_dive", icon = icon("search"),
+               menuItem("Topic Analysis", tabName = "topic_analysis", icon = icon("comment-alt"),
+                        menuSubItem("Topic Model", tabName = "topic_analysis_sub"),
+                        menuSubItem("Coherence Score", tabName = "coherence_score"),
+                        menuSubItem("Word Cloud", tabName = "word_frequency")
+               ),
+               menuItem("Season Trend Analysis", tabName = "season_trend_analysis", icon = icon("calendar-alt"))
+      )
     )
   ),
   dashboardBody(
     useShinyjs(),
+    # ... (Include all the tabItems and their content as before)
     tabItems(
+      tabItem(tabName = "state_level_data"), # Placeholder for state-level data tabs
+      tabItem(tabName = "nlp_data_dive"), # Placeholder for NLP data dive tabs
       tabItem(tabName = "vaccination", ui_vaccine),
       tabItem(tabName = "spending", ui_expen),
       tabItem(tabName = "return_rates", ui_return),
@@ -1157,392 +1192,6 @@ ui <- dashboardPage(
                   p("Calculating coherence scores is a crucial step in assessing the quality of LDA (Latent Dirichlet Allocation) topic models. This process helps quantify and assess the quality of topic models, particularly in terms of the statistical significance of word co-occurrences."),
                   width = 12,
                   style = "font-size: 80%;"
-                )
-              )
-      ),
-      tabItem(tabName = "word_frequency",
-              fluidRow(
-                box(
-                  wordcloud2Output("wordcloud", width = "100%", height = "600px"),
-                  width = 12
-                )
-              )
-      ),
-      tabItem(tabName = "season_trend_analysis",
-              fluidRow(
-                box(
-                  plotlyOutput("heatmapPlot", height = "600px"),
-                  width = 12
-                )
-              ),
-              fluidRow(
-                box(
-                  p("The words that appear in every season are primarily common types of pets (such as cats, dogs), places or activities related to pets (such as veterinarians, houses, food), and common descriptive words (such as time, love, care). This indicates that these are the most common and fundamental vocabulary in pet-related topics.",
-                    "Words that appear only in specific seasons may reflect particular events, topics, or trends of that quarter. For example:",
-                    tags$ul(
-                      tags$li("The words such as 'disease,' 'effectively,' 'Sweden' that appear in 24s2 may be related to specific pet diseases or medical topics."),
-                      tags$li("The words like 'animals,' 'shelter,' and 'surgery' that appear in 24s1 may be associated with topics such as animal shelters, adoption, and medical procedures."),
-                      tags$li("The words 'friend,' 'pain,' and 'update' that appear in 23s4 may be related to topics such as pet illness, injury, and updates on their condition."),
-                      tags$li("The words 'advice,' 'comments,' 'emergency,' and 'life' that appear in 23s3 may be related to topics such as pet emergencies, seeking advice, and other life-related discussions."),
-                      tags$li("The words 'health,' 'kitten,' 'training,' and 'turtle' that appear in 23s2 may be related to the health and training of specific pets such as kittens and turtles.")
-                    ),
-                    "Seasonal changes may also affect the distribution of topic words in different quarters. For example, in certain seasons, there may be more words related to weather, holidays, and seasonal diseases."
-                  ),
-                  width = 12
-                )
-              )
-      )
-    )
-  )
-)
-
-# Server function for integrated Shiny modules
-server <- function(input, output) {
-  server_score(input, output)
-  server_vaccine(input, output)
-  server_chip(input, output)
-  
-  server_return(input, output)
-  server_expen(input, output)
-  
-  # Additional server logic for module 2
-  topic_rationale <- function() {
-    list(
-      "1. Family and Life Advice" = "The frequent use of words such as 'feel', 'care', 'love', and 'family' suggests that this topic is centered around emotional support and familial advice. It highlights a discourse rich in affectivity and concern for the well-being of family members, suggesting that users are seeking or offering guidance on nurturing family bonds, understanding emotional needs, and creating a supportive home environment. This pattern of word frequency reflects the community's collective emphasis on the importance of emotional care within the family dynamic.",
-      "2. Pet Care and Daily Management" = "The recurring appearance of words like 'food', 'morning', and 'night' indicates a focus on daily care and pet management. These terms point to a routine-centric discussion within the community, centered on the regular aspects of pet care, including feeding schedules, morning activities, and nighttime routines. The prominence of such words in the discourse reflects a shared interest in maintaining the health and well-being of pets through consistent daily practices.",
-      "3. Pet Health and Medical Emergencies" = "The prevalence of health-related terms such as 'vet', 'sick', and 'emergency' underscores the medical aspect of pet care. These keywords signal a community's engagement with topics concerning veterinary visits, illness management, and urgent care for pets, highlighting the importance placed on the health and medical needs of animals. The focus on such terms reflects a collective concern for recognizing and responding to health issues, ensuring timely professional care, and preparing for potential emergencies in pet ownership.",
-      "4. Emotional Care and Nighttime Anxiety" = "The presence of words such as 'love', 'night', and 'anxiety' points to discussions around emotional support and stress management for pets. These terms suggest a compassionate approach to addressing pets' emotional well-being, dealing with nighttime restlessness, and alleviating anxiety. This pattern indicates the community's awareness of the psychological needs of pets and the desire to foster an environment that nurtures their mental health. It underscores the importance of emotional bonding and providing a calming presence for pets facing stress or discomfort.",
-      "5. Pet Diet and Weight Management" = "The frequent mentions of 'food', 'diet', 'weight', and 'feeding' are associated with the topics of pet nutrition and weight management. These terms reflect a significant concern and active discussion within the community regarding the proper dietary habits, the importance of balanced food intake, and strategies for maintaining a healthy weight for pets. This focus underscores the commitment to ensuring pets receive the appropriate nutrients for their health and vitality while preventing obesity and related health issues through mindful feeding practices."
-    )
-  }
-  
-  reactive_data <- reactive({
-    req(input$selected_topic)
-    df <- all_topics_data %>% filter(Topic == input$selected_topic)
-    df$WordReorder <- reorder(df$Word, -df$Frequency)
-    return(df)
-  })
-  
-  output$topic_plot <- renderPlotly({
-    req(input$selected_topic)
-    df <- reactive_data()
-    topic_specific_color <- topic_colors[df$Topic[1]]
-    p <- ggplot(df, aes(x = WordReorder, y = Frequency, fill = Topic, text = paste("Word:", Word, "<br>Frequency:", Frequency))) +
-      geom_bar(stat = "identity") +
-      scale_fill_manual(values = topic_specific_color) +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1),
-            axis.text.y = element_text(size = 12, face = "bold"),
-            plot.title = element_text(size = 20, face = "bold"),
-            axis.title.y = element_text(size = 16, face = "bold")) +
-      labs(x = "Word", y = "Frequency", title = input$selected_topic, fill = "Topic")
-    ggplotly(p, tooltip = "text")
-  })
-  
-  observeEvent(input$selected_topic, {
-    req(input$selected_topic)
-    rationale <- topic_rationale()[input$selected_topic]
-    shinyjs::html("rationale_text", sprintf("<strong>Reason for topic naming:</strong> %s", rationale))
-  })
-  
-  output$coherence_plot <- renderPlotly({
-    req(input$selected_topic)
-    
-    topics_df$Topic <- paste("Topic", 1:num_topics)
-    
-    
-    topic_labels <- setNames(topic_names, topics_df$Topic)
-    
-    p <- ggplot(topics_df, aes(x = Topic, y = CoherenceScore, fill = Topic, text = paste("Topic:", Topic, "<br>CoherenceScore:", CoherenceScore))) +
-      geom_bar(stat = "identity") +
-      scale_fill_manual(name = "Topic", values = topic_colors) +
-      scale_x_discrete(labels = topic_labels) +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1),
-            legend.position = "none") +
-      labs(x = "Topic", y = "Coherence Score", title = "Coherence Scores of Topics")
-    ggplotly(p, tooltip = "text")
-  })
-  
-  output$wordcloud <- renderWordcloud2({
-    req(input$selected_topic)
-    wordcloud_data <- new_final_df
-    wordcloud2(wordcloud_data, size = 1.5, shape = 'square',
-               color = brewer.pal(8, "Dark2"), backgroundColor = "white")
-  })
-  
-  output$heatmapPlot <- renderPlotly({
-    
-    long_data <- melt(seasonal_topic_data, id.vars = 'Season')
-    
-    
-    p <- ggplot(long_data, aes(x = variable, y = Season, fill = value)) +
-      geom_tile(color = "black") +
-      scale_fill_gradient(low = "white", high = "#0072B2") +
-      labs(x = "Word", y = "Season", title = "Topic Frequency by Season") +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5, size = 6))
-    
-    
-    ggplotly(p)
-  })
-}
-
-# Run the integrated Shiny app
-shinyApp(ui, server)
-
-
-
-
-
-library(shiny)
-library(shinydashboard)
-library(shinyjs)
-library(ggplot2)
-library(plotly)
-library(wordcloud2)
-library(reshape2)
-library(RColorBrewer)
-
-# UI for integrated Shiny modules with additional sidebar items
-ui <- dashboardPage(
-  dashboardHeader(titleWidth = 290, title = "Integrated Shiny Modules"),
-  dashboardSidebar(
-    width = 290,
-    sidebarMenu(
-      menuItem("2022 State-Level Pet Data", tabName = "state_level_data", icon = icon("paw"),
-               menuItem("Overall Pet Care Score", tabName = "health_scores", icon = icon("heartbeat")),
-               menuItem("Vaccination Rate", tabName = "vaccination", icon = icon("syringe")),
-               menuItem("Microchip Rate", tabName = "microchip", icon = icon("microchip")),
-               menuItem("Rate of Adopted Pets Returned to Shelters", tabName = "return_rates", icon = icon("reply")),
-               menuItem("Average Pet Spending by Households", tabName = "spending", icon = icon("wallet"))
-      ),
-      menuItem("Reddit Pets: NLP Data Dive", tabName = "nlp_data_dive", icon = icon("search"),
-               menuItem("Topic Analysis", tabName = "topic_analysis_sub", icon = icon("comment-alt")),
-               menuItem("Season Trend Analysis", tabName = "season_trend_analysis", icon = icon("calendar-alt"))
-      )
-    )
-  ),
-  dashboardBody(
-    useShinyjs(),
-    tabItems(
-      tabItem(tabName = "state_level_data"), # Placeholder for state-level data tabs
-      tabItem(tabName = "nlp_data_dive"), # Placeholder for NLP data dive tabs
-      tabItem(tabName = "vaccination", ui_vaccine),
-      tabItem(tabName = "spending", ui_expen),
-      tabItem(tabName = "return_rates", ui_return),
-      tabItem(tabName = "microchip", ui_chip),
-      tabItem(tabName = "health_scores", ui_score),
-      tabItem(tabName = "topic_analysis_sub",
-              fluidRow(
-                box(
-                  selectInput("selected_topic", "Select a topic:", choices = c("1. Family and Life Advice", "2. Pet Care and Daily Management", "3. Pet Health and Medical Emergencies", "4. Emotional Care and Nighttime Anxiety", "5. Pet Diet and Weight Management")),
-                  width = 12
-                )
-              ),
-              fluidRow(
-                box(
-                  plotlyOutput("topic_plot", height = "600px"),
-                  div(id = "rationale_text", style = "margin-top: 20px;"),
-                  div(style = "margin-top: 20px; text-align: justify;",
-                      "This word frequency visualization is based on comments from the pet section between April 2023 and April 2024, using data cleansing and topic analysis to get each topic and its associated words, reflecting the main discussion within the community."),
-                  width = 12
-                )
-              )
-      ),
-      tabItem(tabName = "season_trend_analysis",
-              fluidRow(
-                box(
-                  plotlyOutput("heatmapPlot", height = "600px"),
-                  width = 12
-                )
-              ),
-              fluidRow(
-                box(
-                  p("The words that appear in every season are primarily common types of pets (such as cats, dogs), places or activities related to pets (such as veterinarians, houses, food), and common descriptive words (such as time, love, care). This indicates that these are the most common and fundamental vocabulary in pet-related topics.",
-                    "Words that appear only in specific seasons may reflect particular events, topics, or trends of that quarter. For example:",
-                    tags$ul(
-                      tags$li("The words such as 'disease,' 'effectively,' 'Sweden' that appear in 24s2 may be related to specific pet diseases or medical topics."),
-                      tags$li("The words like 'animals,' 'shelter,' and 'surgery' that appear in 24s1 may be associated with topics such as animal shelters, adoption, and medical procedures."),
-                      tags$li("The words 'friend,' 'pain,' and 'update' that appear in 23s4 may be related to topics such as pet illness, injury, and updates on their condition."),
-                      tags$li("The words 'advice,' 'comments,' 'emergency,' and 'life' that appear in 23s3 may be related to topics such as pet emergencies, seeking advice, and other life-related discussions."),
-                      tags$li("The words 'health,' 'kitten,' 'training,' and 'turtle' that appear in 23s2 may be related to the health and training of specific pets such as kittens and turtles.")
-                    ),
-                    "Seasonal changes may also affect the distribution of topic words in different quarters. For example, in certain seasons, there may be more words related to weather, holidays, and seasonal diseases."
-                  ),
-                  width = 12
-                )
-              )
-      )
-    )
-  )
-)
-
-# Server function for integrated Shiny modules with updated navigation logic
-server <- function(input, output) {
-  # Original server functions from module 1
-  server_score(input, output)
-  server_vaccine(input, output)
-  server_chip(input, output)
-  server_return(input, output)
-  server_expen(input, output)
-  
-  # Additional server logic for module 2
-  topic_rationale <- function() {
-    list(
-      "1. Family and Life Advice" = "The frequent use of words such as 'feel', 'care', 'love', and 'family' suggests that this topic is centered around emotional support and familial advice. It highlights a discourse rich in affectivity and concern for the well-being of family members, suggesting that users are seeking or offering guidance on nurturing family bonds, understanding emotional needs, and creating a supportive home environment. This pattern of word frequency reflects the community's collective emphasis on the importance of emotional care within the family dynamic.",
-      "2. Pet Care and Daily Management" = "The recurring appearance of words like 'food', 'morning', and 'night' indicates a focus on daily care and pet management. These terms point to a routine-centric discussion within the community, centered on the regular aspects of pet care, including feeding schedules, morning activities, and nighttime routines. The prominence of such words in the discourse reflects a shared interest in maintaining the health and well-being of pets through consistent daily practices.",
-      "3. Pet Health and Medical Emergencies" = "The prevalence of health-related terms such as 'vet', 'sick', and 'emergency' underscores the medical aspect of pet care. These keywords signal a community's engagement with topics concerning veterinary visits, illness management, and urgent care for pets, highlighting the importance placed on the health and medical needs of animals. The focus on such terms reflects a collective concern for recognizing and responding to health issues, ensuring timely professional care, and preparing for potential emergencies in pet ownership.",
-      "4. Emotional Care and Nighttime Anxiety" = "The presence of words such as 'love', 'night', and 'anxiety' points to discussions around emotional support and stress management for pets. These terms suggest a compassionate approach to addressing pets' emotional well-being, dealing with nighttime restlessness, and alleviating anxiety. This pattern indicates the community's awareness of the psychological needs of pets and the desire to foster an environment that nurtures their mental health. It underscores the importance of emotional bonding and providing a calming presence for pets facing stress or discomfort.",
-      "5. Pet Diet and Weight Management" = "The frequent mentions of 'food', 'diet', 'weight', and 'feeding' are associated with the topics of pet nutrition and weight management. These terms reflect a significant concern and active discussion within the community regarding the proper dietary habits, the importance of balanced food intake, and strategies for maintaining a healthy weight for pets. This focus underscores the commitment to ensuring pets receive the appropriate nutrients for their health and vitality while preventing obesity and related health issues through mindful feeding practices."
-    )
-  }
-  
-  reactive_data <- reactive({
-    req(input$selected_topic)
-    df <- all_topics_data %>% filter(Topic == input$selected_topic)
-    df$WordReorder <- reorder(df$Word, -df$Frequency)
-    return(df)
-  })
-  
-  output$topic_plot <- renderPlotly({
-    req(input$selected_topic)
-    df <- reactive_data()
-    topic_specific_color <- topic_colors[df$Topic[1]]
-    p <- ggplot(df, aes(x = WordReorder, y = Frequency, fill = Topic, text = paste("Word:", Word, "<br>Frequency:", Frequency))) +
-      geom_bar(stat = "identity") +
-      scale_fill_manual(values = topic_specific_color) +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1),
-            axis.text.y = element_text(size = 12, face = "bold"),
-            plot.title = element_text(size = 20, face = "bold"),
-            axis.title.y = element_text(size = 16, face = "bold")) +
-      labs(x = "Word", y = "Frequency", title = input$selected_topic, fill = "Topic")
-    ggplotly(p, tooltip = "text")
-  })
-  
-  observeEvent(input$selected_topic, {
-    req(input$selected_topic)
-    rationale <- topic_rationale()[input$selected_topic]
-    shinyjs::html("rationale_text", sprintf("<strong>Reason for topic naming:</strong> %s", rationale))
-  })
-  
-  output$coherence_plot <- renderPlotly({
-    req(input$selected_topic)
-    
-    topics_df$Topic <- paste("Topic", 1:num_topics)
-    
-    
-    topic_labels <- setNames(topic_names, topics_df$Topic)
-    
-    p <- ggplot(topics_df, aes(x = Topic, y = CoherenceScore, fill = Topic, text = paste("Topic:", Topic, "<br>CoherenceScore:", CoherenceScore))) +
-      geom_bar(stat = "identity") +
-      scale_fill_manual(name = "Topic", values = topic_colors) +
-      scale_x_discrete(labels = topic_labels) +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1),
-            legend.position = "none") +
-      labs(x = "Topic", y = "Coherence Score", title = "Coherence Scores of Topics")
-    ggplotly(p, tooltip = "text")
-  })
-  
-  output$wordcloud <- renderWordcloud2({
-    req(input$selected_topic)
-    wordcloud_data <- new_final_df
-    wordcloud2(wordcloud_data, size = 1.5, shape = 'square',
-               color = brewer.pal(8, "Dark2"), backgroundColor = "white")
-  })
-  
-  output$heatmapPlot <- renderPlotly({
-    
-    long_data <- melt(seasonal_topic_data, id.vars = 'Season')
-    
-    
-    p <- ggplot(long_data, aes(x = variable, y = Season, fill = value)) +
-      geom_tile(color = "black") +
-      scale_fill_gradient(low = "white", high = "#0072B2") +
-      labs(x = "Word", y = "Season", title = "Topic Frequency by Season") +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5, size = 6))
-    
-    
-    ggplotly(p)
-  })
-}
-
-
-shinyApp(ui, server)
-
-
-
-
-
-
-library(shiny)
-library(shinydashboard)
-library(shinyjs)
-library(ggplot2)
-library(plotly)
-library(wordcloud2)
-library(reshape2)
-library(RColorBrewer)
-
-# Function to create a custom dashboard header with a hyperlink
-# Custom Header with a hyperlink at the left side
-header_with_link <- function(url, label) {
-  dashboardHeader(
-    title = tags$a(href = url, target = "_blank", tags$span(label, style = "font-size: 18px; color: white;"), style = "color: white; text-decoration: none;"),
-    titleWidth = 430
-  )
-}
-
-# UI for integrated Shiny modules with a clickable header
-ui <- dashboardPage(
-  header_with_link("https://github.com/QMSS-G5063-2024/Group_O_PetScape-USA.git", "Pet Data Insights : State Trends & Reddit NLP Dive"), # Replace http://www.example.com with your desired URL
-  dashboardSidebar(
-    width = 350,
-    sidebarMenu(
-      menuItem("2022 State-Level Pet Data", tabName = "state_level_data", icon = icon("paw"),
-               menuItem("Overall Pet Care Score", tabName = "health_scores", icon = icon("heartbeat")),
-               menuItem("Vaccination Rate", tabName = "vaccination", icon = icon("syringe")),
-               menuItem("Microchip Rate", tabName = "microchip", icon = icon("microchip")),
-               menuItem("Rate of Adopted Pets Returned to Shelters", tabName = "return_rates", icon = icon("reply")),
-               menuItem("Average Pet Spending by Households", tabName = "spending", icon = icon("wallet"))
-      ),
-      menuItem("Reddit Pets: NLP Data Dive", tabName = "nlp_data_dive", icon = icon("search"),
-               menuItem("Topic Analysis", tabName = "topic_analysis", icon = icon("comment-alt"),
-                        menuSubItem("Topic Model", tabName = "topic_analysis_sub"),
-                        menuSubItem("Word Cloud", tabName = "word_frequency")
-               ),
-               menuItem("Season Trend Analysis", tabName = "season_trend_analysis", icon = icon("calendar-alt"))
-      )
-    )
-  ),
-  dashboardBody(
-    useShinyjs(),
-    # ... (Include all the tabItems and their content as before)
-    tabItems(
-      tabItem(tabName = "state_level_data"), # Placeholder for state-level data tabs
-      tabItem(tabName = "nlp_data_dive"), # Placeholder for NLP data dive tabs
-      tabItem(tabName = "vaccination", ui_vaccine),
-      tabItem(tabName = "spending", ui_expen),
-      tabItem(tabName = "return_rates", ui_return),
-      tabItem(tabName = "microchip", ui_chip),
-      tabItem(tabName = "health_scores", ui_score),
-      tabItem(tabName = "topic_analysis_sub",
-              fluidRow(
-                box(
-                  selectInput("selected_topic", "Select a topic:", choices = c("1. Family and Life Advice", "2. Pet Care and Daily Management", "3. Pet Health and Medical Emergencies", "4. Emotional Care and Nighttime Anxiety", "5. Pet Diet and Weight Management")),
-                  width = 12
-                )
-              ),
-              fluidRow(
-                box(
-                  plotlyOutput("topic_plot", height = "600px"),
-                  div(id = "rationale_text", style = "margin-top: 20px;"),
-                  div(style = "margin-top: 20px; text-align: justify;",
-                      "This word frequency visualization is based on comments from the pet section between April 2023 and April 2024, using data cleansing and topic analysis to get each topic and its associated words, reflecting the main discussion within the community."),
-                  width = 12
                 )
               )
       ),
@@ -1634,6 +1283,26 @@ server <- function(input, output) {
     shinyjs::html("rationale_text", sprintf("<strong>Reason for topic naming:</strong> %s", rationale))
   })
   
+  # Module 2: Coherence Score
+  output$coherence_plot <- renderPlotly({
+    req(input$selected_topic)
+    # 将行名称转换为一个新的列
+    topics_df$Topic <- paste("Topic", 1:num_topics)
+    
+    # 创建一个名称向量，包含主题编号和名称
+    topic_labels <- setNames(topic_names, topics_df$Topic)
+    
+    p <- ggplot(topics_df, aes(x = Topic, y = CoherenceScore, fill = Topic, text = paste("Topic:", Topic, "<br>CoherenceScore:", CoherenceScore))) +
+      geom_bar(stat = "identity") +
+      scale_fill_manual(name = "Topic", values = topic_colors) +
+      scale_x_discrete(labels = topic_labels) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "none") +
+      labs(x = "Topic", y = "Coherence Score", title = "Coherence Scores of Topics")
+    ggplotly(p, tooltip = "text")
+  })
+  
   output$wordcloud <- renderWordcloud2({
     req(input$selected_topic)
     wordcloud_data <- new_final_df
@@ -1642,9 +1311,7 @@ server <- function(input, output) {
   })
   
   output$heatmapPlot <- renderPlotly({
-    
     long_data <- melt(seasonal_topic_data, id.vars = 'Season')
-    
     
     p <- ggplot(long_data, aes(x = variable, y = Season, fill = value)) +
       geom_tile(color = "black") +
@@ -1652,7 +1319,6 @@ server <- function(input, output) {
       labs(x = "Word", y = "Season", title = "Topic Frequency by Season") +
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5, size = 6))
-    
     
     ggplotly(p)
   })
