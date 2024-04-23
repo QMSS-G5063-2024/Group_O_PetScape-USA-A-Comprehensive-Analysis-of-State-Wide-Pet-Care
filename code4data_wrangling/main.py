@@ -4,9 +4,9 @@ import queue
 import praw
 import pandas as pd
 import time
-reddit_read_only = praw.Reddit(client_id="b3I8cuQl46is2L103Wyezw",		 # your client id
-							client_secret="bEIg7_ZhodfmQ1aLeoSmZyqXu6jr-Q",	 # your client secret
-							user_agent="alozxw")	 # your user agent
+reddit_read_only = praw.Reddit(client_id="your client id",		 # your client id
+							client_secret="your client secret",	 # your client secret
+							user_agent="your user agent")	 # your user agent
 
 
 
