@@ -1,0 +1,12 @@
+name: State_Trends_Reddit_Analysis
+title: State_Trends_Reddit_Analysis
+username: moneyluo
+account: moneyluo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 11838003
+bundleId: 8529997
+url: https://moneyluo.shinyapps.io/State_Trends_Reddit_Analysis/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
